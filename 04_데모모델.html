@@ -1,0 +1,138 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>천안 버스 도착정보 · 신뢰도 데모</title>
+<style>
+:root{--navy:#1a2b4a;--blue:#2e86de;--green:#27ae60;--amber:#e69500;--red:#c0392b;--grey:#8a97a8;--line:#e6ebf2;--yellow:#ffd400;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#dfe4ec;font-family:"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;color:var(--navy);padding:16px}
+.phone{max-width:400px;margin:0 auto;background:#fff;border-radius:26px;overflow:hidden;box-shadow:0 10px 30px rgba(30,50,90,.15)}
+.hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px}
+.hd h1{font-size:17px;margin:0;font-weight:800}
+.refresh{width:30px;height:30px;border:none;background:none;cursor:pointer;color:var(--navy)}
+.refresh.spin svg{animation:spin .6s ease}
+@keyframes spin{to{transform:rotate(360deg)}}
+.map{position:relative;height:190px;background:#eef1ec;overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.mapbg{position:absolute;inset:0;width:100%;height:100%}
+.bubble{position:absolute;right:14px;top:16px;background:#fff;border:1px solid #d7dde6;border-radius:14px;padding:7px 12px;font-size:12.5px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.busmk{position:absolute;right:96px;top:46px;text-align:center;z-index:2}
+.busmk .ic{width:46px;height:46px;border-radius:50%;background:#fff;border:2px solid var(--navy);display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.plate{margin-top:4px;background:#fff;border:1.4px solid var(--navy);border-radius:6px;font-size:11px;font-weight:800;padding:2px 6px;display:inline-block}
+.me{position:absolute;left:92px;top:112px;text-align:center;z-index:2}
+.me .dot{width:18px;height:18px;border-radius:50%;background:var(--blue);border:3px solid #fff;margin:0 auto;box-shadow:0 0 0 7px rgba(46,134,222,.18)}
+.me span{font-size:10.5px;color:var(--blue);font-weight:700}
+.yellow{background:var(--yellow);padding:10px 16px;cursor:pointer}
+.yellow .chiprow{display:flex;align-items:center;gap:7px}
+.pin{color:#2c2c2a;font-size:15px}
+.ychip{background:#3a2f00;color:var(--yellow);font-size:10.5px;font-weight:800;padding:2px 9px;border-radius:11px}
+.yellow .name{font-size:15px;font-weight:800;color:#2c2c2a;margin-top:3px}
+.yellow .name small{font-weight:600;color:#5a5320;font-size:11px;margin-left:6px}
+.body{padding:14px 16px 18px}
+.seg{display:flex;gap:7px;margin-bottom:12px}
+.seg button{flex:1;padding:8px;border:1px solid var(--line);background:#fbfcff;border-radius:9px;font-size:13px;font-weight:700;color:var(--grey);cursor:pointer}
+.seg button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.searchwrap{position:relative}
+.search{display:flex;align-items:center;gap:8px;border:1px solid #dde2e9;background:#f0f2f5;border-radius:12px;padding:11px 12px;cursor:text}
+.search input{border:none;background:none;outline:none;font-size:14px;flex:1;color:var(--navy);font-family:inherit}
+.search .mag{width:22px;height:22px;color:var(--grey)}
+.list{position:absolute;left:0;right:0;top:52px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 22px rgba(30,50,90,.12);max-height:230px;overflow:auto;z-index:9;display:none}
+.list.open{display:block}
+.list .it{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;border-bottom:1px solid #f2f4f8}
+.list .it:hover{background:#f6f9fe}
+.list .it b{font-size:15px;font-weight:800}
+.list .it .n{font-size:11.5px;color:var(--grey)}
+.card{margin-top:14px;border-radius:14px;padding:16px;background:#f7f9fc;border:1px solid var(--line)}
+.card .top{display:flex;align-items:center;gap:12px}
+.card .bic{width:46px;height:46px;border-radius:50%;background:#e8eef7;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card .rt{font-size:16px;font-weight:800}
+.card .arr{font-size:12.5px;color:var(--grey);margin-top:2px}
+.badge{margin-left:auto;color:#fff;font-size:13px;font-weight:800;padding:7px 14px;border-radius:16px;white-space:nowrap}
+.why{font-size:12px;color:var(--grey);margin-top:11px;line-height:1.6}
+.why b{color:var(--navy)}
+.alarm{margin-top:14px}
+.alarm .t{font-size:12.5px;font-weight:800;margin-bottom:7px}
+.chips{display:flex;gap:7px}
+.chips button{flex:1;padding:8px;border:1px solid var(--line);background:#fff;border-radius:9px;font-size:12.5px;font-weight:700;color:var(--navy);cursor:pointer}
+.chips button.on{background:#e8f1fb;border-color:var(--blue);color:var(--blue)}
+.foot{font-size:11px;color:var(--grey);text-align:center;padding:6px 16px 16px;line-height:1.6}
+.empty{padding:30px 16px;text-align:center;color:var(--grey);font-size:13px}
+</style></head><body>
+<div class="phone">
+  <div class="hd"><h1>버스 도착 정보</h1>
+    <button class="refresh" id="rf" onclick="refresh()" aria-label="새로고침"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-1.5 5"/><path d="M20 4v5h-5"/></svg></button></div>
+  <div class="map" id="map">
+    <svg class="mapbg" viewBox="0 0 380 190" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="380" height="190" fill="#eaf0ea"/>
+      <polygon points="0,150 380,120 380,190 0,190" fill="#dbe8f2"/>
+      <g stroke="#ffffff" stroke-linecap="round">
+        <line x1="0" y1="45" x2="380" y2="55" stroke-width="9"/>
+        <line x1="0" y1="110" x2="380" y2="100" stroke-width="7"/>
+        <line x1="0" y1="160" x2="380" y2="150" stroke-width="6"/>
+        <line x1="70" y1="0" x2="90" y2="190" stroke-width="8"/>
+        <line x1="180" y1="0" x2="170" y2="190" stroke-width="6"/>
+        <line x1="285" y1="0" x2="300" y2="190" stroke-width="7"/>
+      </g>
+      <g fill="#e0e7dc"><rect x="30" y="60" width="34" height="26" rx="3"/><rect x="200" y="62" width="40" height="24" rx="3"/><rect x="120" y="120" width="30" height="24" rx="3"/><rect x="250" y="120" width="36" height="26" rx="3"/></g>
+      <line x1="255" y1="70" x2="120" y2="128" stroke="#5a6b82" stroke-width="2.4" stroke-dasharray="5 5"/>
+    </svg>
+    <div class="bubble" id="bubble">버스를 선택하세요</div>
+    <div class="busmk"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a2b4a" stroke-width="1.8"><rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 9h16"/><circle cx="8" cy="16" r="1.2" fill="#1a2b4a"/><circle cx="16" cy="16" r="1.2" fill="#1a2b4a"/></svg></div><div class="plate" id="plate">—</div></div>
+    <div class="me"><div class="dot"></div><span>현재 내 위치</span></div>
+  </div>
+  <div class="yellow" id="yellow" onclick="cycleStation()">
+    <div class="chiprow"><span class="pin">◉</span><span class="ychip">내 주변 정류장</span><span style="font-size:11px;color:#5a5320">변경 ›</span></div>
+    <div class="name" id="stname">— <small id="dong"></small></div>
+  </div>
+  <div class="body">
+    <div class="seg" id="seg"><button data-p="낮" class="on">낮 13–14시</button><button data-p="오후">오후 16–17시</button></div>
+    <div class="searchwrap">
+      <div class="search" onclick="openList()"><span class="mag"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span><input id="q" placeholder="버스 번호 검색 (예: 400)" oninput="filterList()" onfocus="openList()"></div>
+      <div class="list" id="list"></div>
+    </div>
+    <div id="result"></div>
+    <div class="alarm"><div class="t">알림 받기</div><div class="chips" id="chips"><button>1분 전</button><button class="on">5분 전</button><button>10분 전</button></div></div>
+  </div>
+  <div class="foot" id="foot">2026.7 실측 10일 기반 · RandomForest 소멸 예측 모델 · 교차검증 AUC 0.81</div>
+</div>
+<script>
+const DATA={"stations": ["종합터미널", "천안역동부광장", "한기대"], "dong": {"종합터미널": "천안시 신부동", "천안역동부광장": "천안시 대흥동", "한기대": "천안시 병천면"}, "rf_sr": {"종합터미널||13": [17, 27], "천안역동부광장||600": [17, 12], "종합터미널||200": [39, 24], "천안역동부광장||87": [53, 18], "종합터미널||14": [0, 18], "종합터미널||20": [0, 11], "종합터미널||700": [60, 13], "천안역동부광장||800": [57, 17], "종합터미널||24": [15, 26], "종합터미널||201": [39, 20], "한기대||400": [49, 13], "천안역동부광장||400": [25, 17], "한기대||405": [43, 12], "천안역동부광장||24": [45, 18], "천안역동부광장||11": [52, 23], "종합터미널||81": [10, 13]}, "rf_srp": {"종합터미널||392||낮": [52, 4], "종합터미널||13||낮": [25, 15], "천안역동부광장||600||낮": [28, 6], "종합터미널||200||낮": [48, 11], "천안역동부광장||87||낮": [55, 11], "종합터미널||14||낮": [0, 9], "종합터미널||20||낮": [0, 9], "종합터미널||700||낮": [70, 6], "천안역동부광장||800||낮": [68, 7], "천안역동부광장||700||낮": [53, 4], "종합터미널||24||낮": [13, 14], "천안역동부광장||640||낮": [57, 4], "종합터미널||201||낮": [56, 9], "한기대||400||낮": [57, 8], "천안역동부광장||400||낮": [21, 8], "천안역동부광장||24||낮": [43, 12], "종합터미널||701||낮": [23, 4], "천안역동부광장||11||낮": [51, 12], "종합터미널||81||낮": [14, 6], "천안역동부광장||62||낮": [22, 4], "종합터미널||24||오후": [17, 12], "종합터미널||700||오후": [52, 7], "천안역동부광장||800||오후": [49, 10], "종합터미널||201||오후": [25, 11], "한기대||400||오후": [35, 5], "천안역동부광장||11||오후": [54, 11], "종합터미널||13||오후": [6, 12], "천안역동부광장||600||오후": [6, 6], "종합터미널||80||오후": [13, 6], "종합터미널||81||오후": [6, 7], "천안역동부광장||400||오후": [29, 9], "한기대||405||오후": [44, 9], "종합터미널||200||오후": [31, 13], "천안역동부광장||24||오후": [49, 6], "천안역동부광장||710||오후": [24, 6], "종합터미널||14||오후": [0, 9], "천안역동부광장||87||오후": [49, 7], "종합터미널||70||오후": [29, 4], "천안역동부광장||650||오후": [78, 4]}};
+const RFSR=DATA.rf_sr,RFSRP=DATA.rf_srp,DONG=DATA.dong;
+let station=DATA.stations.find(s=>s.includes("천안역"))||DATA.stations[0], period="낮", route=null, curMin=null;
+const buses={};
+Object.keys(RFSR).forEach(k=>{const[s,r]=k.split("||");(buses[s]=buses[s]||[]).push(r);});
+for(const s in buses) buses[s].sort((a,b)=>(a.length-b.length)||(+a-+b));
+function plate(r){const num=1000+(+r*37)%9000;return"70바 "+num;}
+function mins(r){return 2+(+r%8);}
+function estimate(s,r,per){const k1=s+"||"+r+"||"+per,k2=s+"||"+r;let p,n;
+ if(RFSRP[k1]){p=RFSRP[k1][0];n=RFSRP[k1][1];}else{p=RFSR[k2][0];n=RFSR[k2][1];}
+ return{p:Math.round(p),n,base:Math.round(p),src:"RandomForest 예측"};}
+function grade(p){return p<20?["신뢰","var(--green)"]:p<40?["주의","var(--amber)"]:["불신","var(--red)"];}
+function setStation(s){station=s;document.getElementById("stname").innerHTML=s+' <small>'+DONG[s]+'</small>';route=null;document.getElementById("q").value="";closeList();render();buildList();}
+function cycleStation(){const i=DATA.stations.indexOf(station);setStation(DATA.stations[(i+1)%DATA.stations.length]);}
+function buildList(){const L=document.getElementById("list");const arr=(buses[station]||[]);const q=document.getElementById("q").value.trim();
+ const items=arr.filter(r=>r.includes(q)).map(r=>{const n=RFSR[station+"||"+r][1];return '<div class="it" onclick="pick(\''+r+'\')"><b>'+r+'번</b><span class="n">표본 '+n+'건</span></div>';});
+ L.innerHTML=items.length?items.join(""):'<div class="empty">해당 버스 없음</div>';}
+function openList(){buildList();document.getElementById("list").classList.add("open");}
+function closeList(){document.getElementById("list").classList.remove("open");}
+function filterList(){buildList();}
+function pick(r){route=r;curMin=mins(r);document.getElementById("q").value=r+"번";closeList();render();}
+function refresh(){const ic=document.getElementById("rf");ic.classList.add("spin");setTimeout(()=>ic.classList.remove("spin"),600);
+ if(route)curMin=curMin>1?curMin-1:mins(route);render();}
+function render(){
+ const R=document.getElementById("result");
+ if(!route){R.innerHTML='<div class="empty">위 검색칸을 눌러 버스 번호를 선택하세요.</div>';
+   document.getElementById("bubble").textContent="버스를 선택하세요";document.getElementById("plate").textContent="—";return;}
+ const {p,n,base,src}=estimate(station,route,period);const [g,col]=grade(p);const m=curMin||mins(route);
+ const arr=m<=1?"곧 도착":"약 "+m+"분 후 도착합니다";
+ document.getElementById("bubble").textContent=m<=1?"곧 도착합니다":m+"분 이내 도착합니다";
+ document.getElementById("plate").textContent=plate(route);
+ const warn=n<30?" (표본 "+n+"건 · 참고용)":" (표본 "+n+"건)";
+ R.innerHTML='<div class="card"><div class="top"><div class="bic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a2b4a" stroke-width="1.8"><rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 9h16"/><circle cx="8" cy="16" r="1.2" fill="#1a2b4a"/><circle cx="16" cy="16" r="1.2" fill="#1a2b4a"/></svg></div>'
+ +'<div><div class="rt">'+route+'번 · 충남 '+plate(route)+'</div><div class="arr">'+arr+'</div></div>'
+ +'<div class="badge" style="background:'+col+'">신뢰도 '+g+'</div></div>'
+ +'<div class="why">소멸(유령) 추정 확률 <b style="color:'+col+'">'+p+'%</b> · 근거: <b>'+src+' '+base+'%</b>'+warn+'</div></div>';
+}
+document.querySelectorAll("#seg button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#seg button").forEach(x=>x.classList.remove("on"));b.classList.add("on");period=b.dataset.p;render();});
+document.querySelectorAll("#chips button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#chips button").forEach(x=>x.classList.remove("on"));b.classList.add("on");});
+document.addEventListener("click",e=>{if(!e.target.closest(".searchwrap"))closeList();});
+setStation(station);
+</script></body></html>
